@@ -58,7 +58,7 @@ struct KmsSigner {
 }
 
 impl KmsSigner {
-    async fn connect(kms_cfg: KmsConfig) -> Result<Self, KmsError> {
+    async fn connect(client: Client, kms_cfg: KmsConfig) -> Result<Self, KmsError> {
         let client_config = ClientConfig::default()
             .with_auth()
             .await?;
@@ -232,10 +232,6 @@ impl KeyProvider for KmsSigner {
 #[non_exhaustive]
 #[derive(Error, Debug)]
 pub enum KmsError {
-    /// Authentication error when connecting to Google Cloud
-    #[error("connect failed with error: {0}")]
-    Connect(#[from] google_cloud_auth::error::Error),
-
     /// Error establishing a connection to the KMS service
     #[error("kms connect failed with error: {0}")]
     KmsConnect(google_cloud_gax::conn::Error),
@@ -408,8 +404,16 @@ impl KmsConfig {
 ///         "1"
 ///     );
 ///
+///     let client_config = ClientConfig::default()
+///        .with_auth()
+///        .await?;
+///
+///     let client = Client::new(client_config)
+///         .await
+///         .unwrap();
+///
 ///     // Create the crypto provider with KMS
-///     let crypto_provider = provider(kms_config).await?;
+///     let crypto_provider = provider(client, kms_config).await?;
 ///
 ///     // Load your client certificate
 ///     let cert_pem = std::fs::read("path/to/client.crt")?;
@@ -440,8 +444,8 @@ impl KmsConfig {
 ///     Ok(())
 /// }
 /// ```
-pub async fn provider(kms_config: KmsConfig) -> Result<CryptoProvider, KmsError> {
-    let kms_signer = KmsSigner::connect(kms_config).await?;
+pub async fn provider(client: Client,kms_config: KmsConfig) -> Result<CryptoProvider, KmsError> {
+    let kms_signer = KmsSigner::connect(client, kms_config).await?;
     let kms_signer = Box::new(kms_signer);
 
     // Safety: This is a deliberate memory leak, as we need the key provider to have static lifetime
