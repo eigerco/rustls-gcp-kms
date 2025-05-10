@@ -519,18 +519,6 @@ fn is_fips_approved(algorithm: &CryptoKeyVersionAlgorithm) -> bool {
 /// # Returns
 ///
 /// A `PrivateKeyDer<'static>` containing a dummy PKCS#8 key with a static lifetime.
-///
-/// # Example
-///
-/// ```rust
-/// use rustls::ClientConfig;
-///
-/// let dummy_key = dummy_key();
-/// let client_cert = load_certificate_from_file("client.crt")?;
-///
-/// let client_config = ClientConfig::builder()
-///     .with_client_auth_cert(vec![client_cert], dummy_key)?;
-/// ```
 #[must_use]
 pub fn dummy_key() -> PrivateKeyDer<'static> {
     let bytes = vec![0_u8; 32];
