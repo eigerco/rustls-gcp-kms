@@ -21,25 +21,25 @@ have any comments or questions on the Code of Conduct.
 # Example
 
 ```rust
-use rustls_kms::{KmsConfig, provider};
-use reqwest::Certificate;
 use std::sync::Arc;
 use google_cloud_kms::client::{Client, ClientConfig};
+use rustls::pki_types::CertificateDer;
+use rustls::RootCertStore;
+use rustls_gcp_kms::{dummy_key, provider, KmsConfig};
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn send_request() -> Result<(), Box<dyn std::error::Error>> {
     // Configure KMS
     let kms_config = KmsConfig::new(
         "my-project-id",
         "global",
         "my-keyring",
         "my-signing-key",
-        "1"
+        "1",
     );
 
     let client_config = ClientConfig::default()
-       .with_auth()
-       .await?;
+        .with_auth()
+        .await?;
 
     let client = Client::new(client_config)
         .await
@@ -49,30 +49,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let crypto_provider = provider(client, kms_config).await?;
 
     // Load your client certificate
-    let cert_pem = std::fs::read("path/to/client.crt")?;
-    let cert = Certificate::from_pem(&cert_pem)?;
+    let cert = std::fs::read("path/to/client.crt")?;
+    let cert = CertificateDer::from_slice(&cert).into_owned();
 
-    // Create a dummy private key (not actually used)
-    let dummy_key = rustls::pki_types::PrivateKeyDer::from(vec![0u8; 32]);
+    let client_config = rustls::ClientConfig::builder_with_provider(Arc::new(crypto_provider))
+        .with_safe_default_protocol_versions()
+        .unwrap()
+        .with_root_certificates(RootCertStore::empty())
+        .with_client_auth_cert(vec![cert], dummy_key());
 
     // Configure reqwest with KMS-backed TLS
     let client = reqwest::Client::builder()
-        .use_preconfigured_tls(
-            rustls::ClientConfig::builder()
-                .with_provider(Arc::new(crypto_provider))
-                .with_client_auth_cert(
-                    vec![cert.clone().into()],
-                    dummy_key
-                )?
-        )
+        .use_rustls_tls()
+        .use_preconfigured_tls(client_config)
         .build()?;
 
     // Make a request with client certificate authentication
-    let response = client.get("https://api.example.com/secure-endpoint")
+    let response = client
+        .get("https://api.example.com/secure-endpoint")
         .send()
         .await?;
 
     println!("Response: {}", response.status());
 
     Ok(())
+}
 }
