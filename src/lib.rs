@@ -254,6 +254,8 @@ pub enum KmsError {
 /// # Examples
 ///
 /// ```
+/// use rustls_gcp_kms::KmsConfig;
+///
 /// // Create a configuration for a key in the "global" location
 /// let config = KmsConfig::new(
 ///     "my-project-id",
@@ -307,6 +309,8 @@ impl KmsConfig {
     /// # Examples
     ///
     /// ```
+    /// use rustls_gcp_kms::KmsConfig;
+    ///
     /// let config = KmsConfig::new(
     ///     "my-project-id",
     ///     "global",
@@ -374,6 +378,8 @@ impl KmsConfig {
 /// use reqwest::Certificate;
 /// use std::sync::Arc;
 /// use google_cloud_kms::client::{Client, ClientConfig};
+/// use crate::Client;
+/// use google_cloud_kms::grpc::apiv1::kms_client::Client
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -404,15 +410,16 @@ impl KmsConfig {
 ///     // Create a dummy private key (not actually used)
 ///     let dummy_key = rustls::pki_types::PrivateKeyDer::from(vec![0u8; 32]);
 ///
+///     let client_config = rustls::ClientConfig::builder_with_provider(Arc::new(crypto_provider))
+///       .with_safe_default_protocol_versions()
+///       .unwrap()
+///       .with_root_certificates(root_store)
+///       .with_client_auth_cert(vec![cert.clone().into()], dummy_key);
+///
 ///     // Configure reqwest with KMS-backed TLS
 ///     let client = reqwest::Client::builder()
 ///         .use_preconfigured_tls(
-///             rustls::ClientConfig::builder()
-///                 .with_provider(Arc::new(crypto_provider))
-///                 .with_client_auth_cert(
-///                     vec![cert.clone().into()],
-///                     dummy_key
-///                 )?
+///             client_config
 ///         )
 ///         .build()?;
 ///
