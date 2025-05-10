@@ -18,6 +18,9 @@ sha2 = "0.10"
 eyre = "0.6"
 
 [dev-dependencies]
-tokio =  { version = "1", features = ["rt-multi-thread", "macros"] }
-rustls = { version = "0.23.15", default-features = false, features = ["ring", "std" ] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+rustls = { version = "0.23.15", default-features = false, features = [
+  "ring",
+  "std",
+] }
 reqwest = { version = "0.12", features = ["rustls-tls"] }
