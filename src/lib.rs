@@ -26,7 +26,7 @@ use core::fmt::Debug;
 use std::sync::Arc;
 
 use futures::executor::block_on;
-use google_cloud_kms::client::{Client, ClientConfig, google_cloud_auth};
+use google_cloud_kms::client::{Client, ClientConfig};
 use google_cloud_kms::grpc::kms::v1::crypto_key::CryptoKeyPurpose;
 use google_cloud_kms::grpc::kms::v1::crypto_key_version::CryptoKeyVersionAlgorithm;
 use google_cloud_kms::grpc::kms::v1::{
