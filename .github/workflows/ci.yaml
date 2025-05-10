@@ -63,6 +63,7 @@ jobs:
         run: cargo build --release
         env:
           RUST_BACKTRACE: 1
+      - run: cargo test
 
   msrv:
     name: MSRV
