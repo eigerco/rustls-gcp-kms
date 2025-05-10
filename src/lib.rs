@@ -59,14 +59,6 @@ struct KmsSigner {
 
 impl KmsSigner {
     async fn connect(client: Client, kms_cfg: KmsConfig) -> Result<Self, KmsError> {
-        let client_config = ClientConfig::default()
-            .with_auth()
-            .await?;
-
-        let client = Client::new(client_config)
-            .await
-            .map_err(KmsError::KmsConnect)?;
-
         let crypto_key = client
             .get_crypto_key(
                 GetCryptoKeyRequest {
