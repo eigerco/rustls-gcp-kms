@@ -1223,8 +1223,7 @@ dependencies = [
  "gcloud-kms",
  "rustls",
  "sha2",
- "thiserror 1.0.69",
- "tracing",
+ "thiserror 2.0.12",
 ]
 
 [[package]]

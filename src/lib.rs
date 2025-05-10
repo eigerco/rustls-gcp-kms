@@ -15,6 +15,7 @@
 #![allow(clippy::single_call_fn)]
 #![allow(clippy::str_to_string)]
 #![allow(clippy::missing_inline_in_public_items)]
+#![allow(clippy::multiple_crate_versions)]
 
 //! Rustls KMS Provider
 //!
