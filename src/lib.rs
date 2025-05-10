@@ -26,12 +26,12 @@ use core::fmt::Debug;
 use std::sync::Arc;
 
 use futures::executor::block_on;
-use google_cloud_kms::client::{Client, ClientConfig};
+use google_cloud_kms::client::{google_cloud_auth, Client};
 use google_cloud_kms::grpc::kms::v1::crypto_key::CryptoKeyPurpose;
 use google_cloud_kms::grpc::kms::v1::crypto_key_version::CryptoKeyVersionAlgorithm;
 use google_cloud_kms::grpc::kms::v1::{
-    AsymmetricSignRequest, Digest, GetCryptoKeyRequest, GetCryptoKeyVersionRequest,
-    GetPublicKeyRequest, digest,
+    digest, AsymmetricSignRequest, Digest, GetCryptoKeyRequest, GetCryptoKeyVersionRequest,
+    GetPublicKeyRequest,
 };
 use rustls::crypto::{CryptoProvider, KeyProvider};
 use rustls::pki_types::pem::PemObject;
@@ -381,6 +381,7 @@ impl KmsConfig {
 /// use rustls_kms::{KmsConfig, provider};
 /// use reqwest::Certificate;
 /// use std::sync::Arc;
+/// use google_cloud_kms::client::{Client, ClientConfig};
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -433,7 +434,7 @@ impl KmsConfig {
 ///     Ok(())
 /// }
 /// ```
-pub async fn provider(client: Client,kms_config: KmsConfig) -> Result<CryptoProvider, KmsError> {
+pub async fn provider(client: Client, kms_config: KmsConfig) -> Result<CryptoProvider, KmsError> {
     let kms_signer = KmsSigner::connect(client, kms_config).await?;
     let kms_signer = Box::new(kms_signer);
 
