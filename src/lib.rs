@@ -21,17 +21,19 @@
 //!
 //! A library that enables TLS client authentication using private keys stored in Google Cloud KMS.
 //! This allows secure key management where the private key never leaves the secure KMS environment.
+//!
+//! Use [`provider`](`client:google_cloud_kms::client::Client`, `kms_config: KmsConfig`) to create a new provider with the specified KMS configuration.
 
 use core::fmt::Debug;
 use std::sync::Arc;
 
 use futures::executor::block_on;
-use google_cloud_kms::client::{Client, ClientConfig, google_cloud_auth};
+use google_cloud_kms::client::{google_cloud_auth, Client};
 use google_cloud_kms::grpc::kms::v1::crypto_key::CryptoKeyPurpose;
 use google_cloud_kms::grpc::kms::v1::crypto_key_version::CryptoKeyVersionAlgorithm;
 use google_cloud_kms::grpc::kms::v1::{
-    AsymmetricSignRequest, Digest, GetCryptoKeyRequest, GetCryptoKeyVersionRequest,
-    GetPublicKeyRequest, digest,
+    digest, AsymmetricSignRequest, Digest, GetCryptoKeyRequest, GetCryptoKeyVersionRequest,
+    GetPublicKeyRequest,
 };
 use rustls::crypto::{CryptoProvider, KeyProvider};
 use rustls::pki_types::pem::PemObject;
@@ -58,15 +60,7 @@ struct KmsSigner {
 }
 
 impl KmsSigner {
-    async fn connect(kms_cfg: KmsConfig) -> Result<Self, KmsError> {
-        let client_config = ClientConfig::default()
-            .with_auth()
-            .await?;
-
-        let client = Client::new(client_config)
-            .await
-            .map_err(KmsError::KmsConnect)?;
-
+    async fn connect(client: Client, kms_cfg: KmsConfig) -> Result<Self, KmsError> {
         let crypto_key = client
             .get_crypto_key(
                 GetCryptoKeyRequest {
@@ -235,31 +229,24 @@ pub enum KmsError {
     /// Authentication error when connecting to Google Cloud
     #[error("connect failed with error: {0}")]
     Connect(#[from] google_cloud_auth::error::Error),
-
     /// Error establishing a connection to the KMS service
     #[error("kms connect failed with error: {0}")]
     KmsConnect(google_cloud_gax::conn::Error),
-
     /// Error retrieving crypto key information from KMS
     #[error("kms get crypto key failed with error: {0}")]
     GetCryptoKey(google_cloud_gax::grpc::Status),
-
     /// Error retrieving crypto key version information from KMS
     #[error("kms get crypto key version failed with error: {0}")]
     GetCryptoKeyVersion(google_cloud_gax::grpc::Status),
-
     /// Error retrieving the public key from KMS
     #[error("could not get public key due to error: {0:?}")]
     GetPublicKey(google_cloud_gax::grpc::Status),
-
     /// Error parsing the PEM-encoded public key
     #[error("could not parse pem value due to error: {0}")]
     PemParse(#[from] rustls::pki_types::pem::Error),
-
     /// The key in KMS is not configured for asymmetric signing
     #[error("key purpose is not asymmetric sign, purpose is: {0:?}")]
     UnexpectedKeyPurpose(CryptoKeyPurpose),
-
     /// The key algorithm is not supported by rustls
     #[error("usupported scheme of kms {0}")]
     UnsupportedScheme(String),
@@ -268,7 +255,8 @@ pub enum KmsError {
 /// Configuration for connecting to Google Cloud KMS and identifying a specific key.
 ///
 /// This struct encapsulates all the information needed to locate a specific key version
-/// in Google Cloud KMS. It follows Google's resource naming hierarchy:
+/// in Google Cloud KMS.
+/// It follows Google's resource naming hierarchy:
 /// `projects/{project_id}/locations/{location}/keyRings/{keyring}/cryptoKeys/{key}/cryptoKeyVersions/{version}`
 ///
 /// # Examples
@@ -298,11 +286,11 @@ pub struct KmsConfig {
     /// Google Cloud project ID
     pub project_id: String,
     /// Location where the key is stored (e.g., "global", "us-central1")
-    pub location_id: String,
+    pub location: String,
     /// Name of the key ring containing the key
-    pub keyring_id: String,
+    pub keyring: String,
     /// Name of the crypto key
-    pub cryptokey_id: String,
+    pub cryptokey: String,
     /// Version of the crypto key to use
     pub cryptokey_version: String,
 }
@@ -313,9 +301,9 @@ impl KmsConfig {
     /// # Arguments
     ///
     /// * `project_id` - Google Cloud project ID
-    /// * `location_id` - Location where the key is stored (e.g., "global", "us-central1")
-    /// * `keyring_id` - Name of the key ring containing the key
-    /// * `cryptokey_id` - Name of the crypto key
+    /// * `locationd` - Location where the key is stored (e.g., "global", "us-central1")
+    /// * `keyring` - Name of the key ring containing the key
+    /// * `cryptokey` - Name of the crypto key
     /// * `cryptokey_version` - Version of the crypto key to use
     ///
     /// # Returns
@@ -349,21 +337,21 @@ impl KmsConfig {
     {
         Self {
             project_id: project_id.into(),
-            location_id: location_id.into(),
-            keyring_id: keyring_id.into(),
-            cryptokey_id: cryptokey_id.into(),
+            location: location_id.into(),
+            keyring: keyring_id.into(),
+            cryptokey: cryptokey_id.into(),
             cryptokey_version: cryptokey_version.into(),
         }
     }
 
     fn crypto_key_name(&self) -> String {
         let project_id = &self.project_id;
-        let location_id = &self.location_id;
-        let keyring_id = &self.keyring_id;
-        let crypto_key_id = &self.cryptokey_id;
+        let location = &self.location;
+        let keyring = &self.keyring;
+        let crypto_key = &self.cryptokey;
 
         format!(
-            "projects/{project_id}/locations/{location_id}/keyRings/{keyring_id}/cryptoKeys/{crypto_key_id}"
+            "projects/{project_id}/locations/{location}/keyRings/{keyring}/cryptoKeys/{crypto_key}"
         )
     }
 
@@ -396,6 +384,7 @@ impl KmsConfig {
 /// use rustls_kms::{KmsConfig, provider};
 /// use reqwest::Certificate;
 /// use std::sync::Arc;
+/// use google_cloud_kms::client::{Client, ClientConfig};
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -408,8 +397,16 @@ impl KmsConfig {
 ///         "1"
 ///     );
 ///
+///     let client_config = ClientConfig::default()
+///        .with_auth()
+///        .await?;
+///
+///     let client = Client::new(client_config)
+///         .await
+///         .unwrap();
+///
 ///     // Create the crypto provider with KMS
-///     let crypto_provider = provider(kms_config).await?;
+///     let crypto_provider = provider(client, kms_config).await?;
 ///
 ///     // Load your client certificate
 ///     let cert_pem = std::fs::read("path/to/client.crt")?;
@@ -440,8 +437,8 @@ impl KmsConfig {
 ///     Ok(())
 /// }
 /// ```
-pub async fn provider(kms_config: KmsConfig) -> Result<CryptoProvider, KmsError> {
-    let kms_signer = KmsSigner::connect(kms_config).await?;
+pub async fn provider(client: Client, kms_config: KmsConfig) -> Result<CryptoProvider, KmsError> {
+    let kms_signer = KmsSigner::connect(client, kms_config).await?;
     let kms_signer = Box::new(kms_signer);
 
     // Safety: This is a deliberate memory leak, as we need the key provider to have static lifetime
