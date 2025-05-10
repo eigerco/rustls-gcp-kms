@@ -232,30 +232,27 @@ impl KeyProvider for KmsSigner {
 #[non_exhaustive]
 #[derive(Error, Debug)]
 pub enum KmsError {
+    /// Authentication error when connecting to Google Cloud
+    #[error("connect failed with error: {0}")]
+    Connect(#[from] google_cloud_auth::error::Error),
     /// Error establishing a connection to the KMS service
     #[error("kms connect failed with error: {0}")]
     KmsConnect(google_cloud_gax::conn::Error),
-
     /// Error retrieving crypto key information from KMS
     #[error("kms get crypto key failed with error: {0}")]
     GetCryptoKey(google_cloud_gax::grpc::Status),
-
     /// Error retrieving crypto key version information from KMS
     #[error("kms get crypto key version failed with error: {0}")]
     GetCryptoKeyVersion(google_cloud_gax::grpc::Status),
-
     /// Error retrieving the public key from KMS
     #[error("could not get public key due to error: {0:?}")]
     GetPublicKey(google_cloud_gax::grpc::Status),
-
     /// Error parsing the PEM-encoded public key
     #[error("could not parse pem value due to error: {0}")]
     PemParse(#[from] rustls::pki_types::pem::Error),
-
     /// The key in KMS is not configured for asymmetric signing
     #[error("key purpose is not asymmetric sign, purpose is: {0:?}")]
     UnexpectedKeyPurpose(CryptoKeyPurpose),
-
     /// The key algorithm is not supported by rustls
     #[error("usupported scheme of kms {0}")]
     UnsupportedScheme(String),
