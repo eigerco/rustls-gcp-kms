@@ -48,7 +48,7 @@ struct KmsSigner {
     /// Google Cloud KMS client
     client: Arc<Client>,
     /// Key version name in GCP resource format
-    key_version_name: String,
+    cryptokey_version_name: String,
     /// Supported signature scheme
     scheme: SignatureScheme,
     /// Supported signature algorithm
@@ -64,7 +64,7 @@ impl KmsSigner {
         let crypto_key = client
             .get_crypto_key(
                 GetCryptoKeyRequest {
-                    name: kms_cfg.crypto_key_name(),
+                    name: kms_cfg.crypto_key_name,
                 },
                 None,
             )
@@ -80,7 +80,7 @@ impl KmsSigner {
         let crypto_key_version = client
             .get_crypto_key_version(
                 GetCryptoKeyVersionRequest {
-                    name: kms_cfg.crypto_key_version(),
+                    name: kms_cfg.crypto_key_version_name.clone(),
                 },
                 None,
             )
@@ -90,7 +90,7 @@ impl KmsSigner {
         let public_key_pem = client
             .get_public_key(
                 GetPublicKeyRequest {
-                    name: kms_cfg.crypto_key_version(),
+                    name: kms_cfg.crypto_key_version_name.clone(),
                     public_key_format: 0,
                 },
                 None,
@@ -116,7 +116,7 @@ impl KmsSigner {
 
         Ok(Self {
             client,
-            key_version_name: kms_cfg.crypto_key_version(),
+            cryptokey_version_name: kms_cfg.crypto_key_version_name,
             scheme,
             algorithm,
             public_key,
@@ -131,44 +131,36 @@ impl Signer for KmsSigner {
             SignatureScheme::RSA_PKCS1_SHA256
             | SignatureScheme::RSA_PSS_SHA256
             | SignatureScheme::ECDSA_NISTP256_SHA256 => {
-                use sha2::{Digest as _, Sha256};
-                let mut hasher = Sha256::new();
-                hasher.update(message);
-                let hash = hasher.finalize();
-
+                use sha2::Digest as _;
+                let hash = sha2::Sha256::digest(message);
                 Digest {
                     digest: Some(digest::Digest::Sha256(hash.to_vec())),
                 }
             }
             SignatureScheme::ECDSA_NISTP384_SHA384 => {
-                use sha2::{Digest as _, Sha384};
-                let mut hasher = Sha384::new();
-                hasher.update(message);
-                let hash = hasher.finalize();
-
+                use sha2::Digest as _;
+                let hash = sha2::Sha384::digest(message);
                 Digest {
                     digest: Some(digest::Digest::Sha384(hash.to_vec())),
                 }
             }
             SignatureScheme::RSA_PKCS1_SHA512 | SignatureScheme::RSA_PSS_SHA512 => {
-                use sha2::{Digest as _, Sha512};
-                let mut hasher = Sha512::new();
-                hasher.update(message);
-                let hash = hasher.finalize();
-
+                use sha2::Digest as _;
+                let hash = sha2::Sha512::digest(message);
                 Digest {
                     digest: Some(digest::Digest::Sha512(hash.to_vec())),
                 }
             }
-            _ => {
-                return Err(rustls::Error::General(
-                    "Unsupported signature scheme".into(),
-                ));
+            scheme => {
+                return Err(rustls::Error::General(format!(
+                    "Unsupported signature scheme {}",
+                    scheme.as_str().unwrap_or_default()
+                )));
             }
         };
 
         let req = AsymmetricSignRequest {
-            name: self.key_version_name.clone(),
+            name: self.cryptokey_version_name.clone(),
             data: message.to_vec(),
             digest: Some(digest),
             ..Default::default()
@@ -293,6 +285,8 @@ pub struct KmsConfig {
     pub cryptokey: String,
     /// Version of the crypto key to use
     pub cryptokey_version: String,
+    crypto_key_name: String,
+    crypto_key_version_name: String,
 }
 
 impl KmsConfig {
@@ -335,31 +329,26 @@ impl KmsConfig {
         CK: Into<String>,
         CV: Into<String>,
     {
+        let project_id = project_id.into();
+        let location = location_id.into();
+        let keyring = keyring_id.into();
+        let cryptokey = cryptokey_id.into();
+        let cryptokey_version = cryptokey_version.into();
+        let crypto_key_name = format!(
+            "projects/{project_id}/locations/{location}/keyRings/{keyring}/cryptoKeys/{cryptokey}"
+        );
+        let crypto_key_version_name =
+            format!("{crypto_key_name}/cryptoKeyVersions/{cryptokey_version}");
+
         Self {
-            project_id: project_id.into(),
-            location: location_id.into(),
-            keyring: keyring_id.into(),
-            cryptokey: cryptokey_id.into(),
-            cryptokey_version: cryptokey_version.into(),
+            project_id,
+            location,
+            keyring,
+            cryptokey,
+            cryptokey_version,
+            crypto_key_name,
+            crypto_key_version_name,
         }
-    }
-
-    fn crypto_key_name(&self) -> String {
-        let project_id = &self.project_id;
-        let location = &self.location;
-        let keyring = &self.keyring;
-        let crypto_key = &self.cryptokey;
-
-        format!(
-            "projects/{project_id}/locations/{location}/keyRings/{keyring}/cryptoKeys/{crypto_key}"
-        )
-    }
-
-    fn crypto_key_version(&self) -> String {
-        let crypto_key_name = self.crypto_key_name();
-        let cryptokey_version = &self.cryptokey_version;
-
-        format!("{crypto_key_name}/cryptoKeyVersions/{cryptokey_version}")
     }
 }
 
@@ -448,8 +437,8 @@ pub async fn provider(client: Client, kms_config: KmsConfig) -> Result<CryptoPro
     let ring_provider = rustls::crypto::ring::default_provider();
 
     let provider = CryptoProvider {
-        cipher_suites: ring_provider.cipher_suites.clone(),
-        kx_groups: ring_provider.kx_groups.clone(),
+        cipher_suites: ring_provider.cipher_suites,
+        kx_groups: ring_provider.kx_groups,
         signature_verification_algorithms: ring_provider.signature_verification_algorithms,
         secure_random: ring_provider.secure_random,
         key_provider,
