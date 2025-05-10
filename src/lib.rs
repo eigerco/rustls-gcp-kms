@@ -21,6 +21,8 @@
 //!
 //! A library that enables TLS client authentication using private keys stored in Google Cloud KMS.
 //! This allows secure key management where the private key never leaves the secure KMS environment.
+//!
+//! Use [`provider`](`client:google_cloud_kms::client::Client`, `kms_config: KmsConfig`) to create a new provider with the specified KMS configuration.
 
 use core::fmt::Debug;
 use std::sync::Arc;
@@ -253,7 +255,8 @@ pub enum KmsError {
 /// Configuration for connecting to Google Cloud KMS and identifying a specific key.
 ///
 /// This struct encapsulates all the information needed to locate a specific key version
-/// in Google Cloud KMS. It follows Google's resource naming hierarchy:
+/// in Google Cloud KMS.
+/// It follows Google's resource naming hierarchy:
 /// `projects/{project_id}/locations/{location}/keyRings/{keyring}/cryptoKeys/{key}/cryptoKeyVersions/{version}`
 ///
 /// # Examples
@@ -283,11 +286,11 @@ pub struct KmsConfig {
     /// Google Cloud project ID
     pub project_id: String,
     /// Location where the key is stored (e.g., "global", "us-central1")
-    pub location_id: String,
+    pub location: String,
     /// Name of the key ring containing the key
-    pub keyring_id: String,
+    pub keyring: String,
     /// Name of the crypto key
-    pub cryptokey_id: String,
+    pub cryptokey: String,
     /// Version of the crypto key to use
     pub cryptokey_version: String,
 }
@@ -298,9 +301,9 @@ impl KmsConfig {
     /// # Arguments
     ///
     /// * `project_id` - Google Cloud project ID
-    /// * `location_id` - Location where the key is stored (e.g., "global", "us-central1")
-    /// * `keyring_id` - Name of the key ring containing the key
-    /// * `cryptokey_id` - Name of the crypto key
+    /// * `locationd` - Location where the key is stored (e.g., "global", "us-central1")
+    /// * `keyring` - Name of the key ring containing the key
+    /// * `cryptokey` - Name of the crypto key
     /// * `cryptokey_version` - Version of the crypto key to use
     ///
     /// # Returns
@@ -334,21 +337,21 @@ impl KmsConfig {
     {
         Self {
             project_id: project_id.into(),
-            location_id: location_id.into(),
-            keyring_id: keyring_id.into(),
-            cryptokey_id: cryptokey_id.into(),
+            location: location_id.into(),
+            keyring: keyring_id.into(),
+            cryptokey: cryptokey_id.into(),
             cryptokey_version: cryptokey_version.into(),
         }
     }
 
     fn crypto_key_name(&self) -> String {
         let project_id = &self.project_id;
-        let location_id = &self.location_id;
-        let keyring_id = &self.keyring_id;
-        let crypto_key_id = &self.cryptokey_id;
+        let location = &self.location;
+        let keyring = &self.keyring;
+        let crypto_key = &self.cryptokey;
 
         format!(
-            "projects/{project_id}/locations/{location_id}/keyRings/{keyring_id}/cryptoKeys/{crypto_key_id}"
+            "projects/{project_id}/locations/{location}/keyRings/{keyring}/cryptoKeys/{crypto_key}"
         )
     }
 
