@@ -1,10 +1,9 @@
-name: semantic commit
+name: Ensure Conventional Commit message
 
 permissions:
   contents: read
 
-on:
-  pull_request:
+on: pull_request
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
