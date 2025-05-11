@@ -217,7 +217,6 @@ impl KeyProvider for KmsSigner {
 /// and using the key for TLS authentication.
 #[non_exhaustive]
 #[derive(Error, Debug)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum KmsError {
     /// Authentication error when connecting to Google Cloud
     #[error("connect failed with error: {0}")]
@@ -277,6 +276,7 @@ pub enum KmsError {
 /// ```
 #[non_exhaustive]
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct KmsConfig {
     /// Google Cloud project ID
     pub project_id: String,
