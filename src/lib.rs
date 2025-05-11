@@ -387,6 +387,10 @@ impl KmsConfig {
             errors.push("cryptokey should be set");
         }
 
+        if self.cryptokey_version.is_empty() {
+            errors.push("cryptokey_version should be set");
+        }
+
         if errors.is_empty() {
             return Ok(());
         }
