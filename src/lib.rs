@@ -356,6 +356,45 @@ impl KmsConfig {
     }
 }
 
+impl KmsConfig {
+    /// Validates that all required KMS configuration fields have been set.
+    ///
+    /// This function checks that none of the essential KMS configuration fields
+    /// are empty, which would cause authentication failures when interacting
+    /// with the Google Cloud KMS service.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(())` if all required fields are non-empty
+    /// - `Err(String)` containing a comma-separated list of validation errors
+    ///   if any required fields are empty
+    pub fn validate(&self) -> Result<(), String> {
+        let mut errors = Vec::new();
+
+        if self.project_id.is_empty() {
+            errors.push("project_id should be set");
+        }
+
+        if self.location.is_empty() {
+            errors.push("location should be set");
+        }
+
+        if self.keyring.is_empty() {
+            errors.push("keyring should be set");
+        }
+
+        if self.cryptokey.is_empty() {
+            errors.push("cryptokey should be set");
+        }
+
+        if errors.is_empty() {
+            return Ok(());
+        }
+
+        Err(errors.join(","))
+    }
+}
+
 /// Creates a `CryptoProvider` that uses Google Cloud KMS for TLS client authentication.
 ///
 /// This function connects to Google Cloud KMS, retrieves information about the specified key,
