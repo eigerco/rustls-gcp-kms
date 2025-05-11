@@ -44,7 +44,6 @@ use thiserror::Error;
 
 /// KMS Signer implementation that delegates TLS signing operations to Google Cloud KMS
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 struct KmsSigner {
     /// Google Cloud KMS client
     client: Arc<Client>,
@@ -218,6 +217,7 @@ impl KeyProvider for KmsSigner {
 /// and using the key for TLS authentication.
 #[non_exhaustive]
 #[derive(Error, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum KmsError {
     /// Authentication error when connecting to Google Cloud
     #[error("connect failed with error: {0}")]
