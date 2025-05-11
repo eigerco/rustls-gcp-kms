@@ -251,29 +251,6 @@ pub enum KmsError {
 /// It follows Google's resource naming hierarchy:
 /// `projects/{project_id}/locations/{location}/keyRings/{keyring}/cryptoKeys/{key}/cryptoKeyVersions/{version}`
 ///
-/// # Examples
-///
-/// ```
-/// use rustls_gcp_kms::KmsConfig;
-///
-/// // Create a configuration for a key in the "global" location
-/// let config = KmsConfig::new(
-///     "my-project-id",
-///     "global",
-///     "my-keyring",
-///     "my-signing-key",
-///     "1"  // Version number
-/// );
-///
-/// // Create a configuration for a key in a specific region
-/// let regional_config = KmsConfig::new(
-///     "my-project-id",
-///     "us-central1",
-///     "production-keyring",
-///     "api-signing-key",
-///     "3"  // Version number
-/// );
-/// ```
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct KmsConfig {
@@ -305,20 +282,6 @@ impl KmsConfig {
     /// # Returns
     ///
     /// A new `KmsConfig` instance.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rustls_gcp_kms::KmsConfig;
-    ///
-    /// let config = KmsConfig::new(
-    ///     "my-project-id",
-    ///     "global",
-    ///     "my-keyring",
-    ///     "my-signing-key",
-    ///     "1"
-    /// );
-    /// ```
     pub fn new<P, L, KR, CK, CV>(
         project_id: P,
         location_id: L,
