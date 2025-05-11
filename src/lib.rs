@@ -44,7 +44,6 @@ use thiserror::Error;
 
 /// KMS Signer implementation that delegates TLS signing operations to Google Cloud KMS
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 struct KmsSigner {
     /// Google Cloud KMS client
     client: Arc<Client>,
@@ -252,31 +251,8 @@ pub enum KmsError {
 /// It follows Google's resource naming hierarchy:
 /// `projects/{project_id}/locations/{location}/keyRings/{keyring}/cryptoKeys/{key}/cryptoKeyVersions/{version}`
 ///
-/// # Examples
-///
-/// ```
-/// use rustls_gcp_kms::KmsConfig;
-///
-/// // Create a configuration for a key in the "global" location
-/// let config = KmsConfig::new(
-///     "my-project-id",
-///     "global",
-///     "my-keyring",
-///     "my-signing-key",
-///     "1"  // Version number
-/// );
-///
-/// // Create a configuration for a key in a specific region
-/// let regional_config = KmsConfig::new(
-///     "my-project-id",
-///     "us-central1",
-///     "production-keyring",
-///     "api-signing-key",
-///     "3"  // Version number
-/// );
-/// ```
-#[non_exhaustive]
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct KmsConfig {
     /// Google Cloud project ID
     pub project_id: String,
@@ -306,20 +282,6 @@ impl KmsConfig {
     /// # Returns
     ///
     /// A new `KmsConfig` instance.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rustls_gcp_kms::KmsConfig;
-    ///
-    /// let config = KmsConfig::new(
-    ///     "my-project-id",
-    ///     "global",
-    ///     "my-keyring",
-    ///     "my-signing-key",
-    ///     "1"
-    /// );
-    /// ```
     pub fn new<P, L, KR, CK, CV>(
         project_id: P,
         location_id: L,
@@ -354,6 +316,49 @@ impl KmsConfig {
             crypto_key_name,
             crypto_key_version_name,
         }
+    }
+}
+
+impl KmsConfig {
+    /// Validates that all required KMS configuration fields have been set.
+    ///
+    /// This function checks that none of the essential KMS configuration fields
+    /// are empty, which would cause authentication failures when interacting
+    /// with the Google Cloud KMS service.
+    ///
+    /// # Returns
+    ///
+    /// - `Ok(())` if all required fields are non-empty
+    /// - `Err(String)` containing a comma-separated list of validation errors
+    ///   if any required fields are empty
+    pub fn validate(&self) -> Result<(), String> {
+        let mut errors = Vec::new();
+
+        if self.project_id.is_empty() {
+            errors.push("project_id should be set");
+        }
+
+        if self.location.is_empty() {
+            errors.push("location should be set");
+        }
+
+        if self.keyring.is_empty() {
+            errors.push("keyring should be set");
+        }
+
+        if self.cryptokey.is_empty() {
+            errors.push("cryptokey should be set");
+        }
+
+        if self.cryptokey_version.is_empty() {
+            errors.push("cryptokey_version should be set");
+        }
+
+        if errors.is_empty() {
+            return Ok(());
+        }
+
+        Err(errors.join(","))
     }
 }
 

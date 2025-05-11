@@ -57,13 +57,13 @@ jobs:
           toolchain: ${{ matrix.rust }}
 
       - name: cargo build (debug;)
-        run: cargo build --locked
+        run: cargo build --locked --all-features
 
       - name: cargo build (release;)
-        run: cargo build --release
+        run: cargo build --release --all-features
         env:
           RUST_BACKTRACE: 1
-      - run: cargo test
+      - run: cargo test --all-features
 
   msrv:
     name: MSRV
@@ -78,13 +78,13 @@ jobs:
         with:
           toolchain: "1.82"
 
-      - run: cargo check --locked --lib
+      - run: cargo check --locked --lib --all-features
 
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: "1.86.0"
 
-      - run: cargo check --locked --lib
+      - run: cargo check --locked --lib --all-features
 
   docs:
     name: Check for documentation errors
@@ -99,7 +99,7 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
 
       - name: cargo doc
-        run: cargo doc --locked --no-deps --document-private-items
+        run: cargo doc --locked --no-deps --document-private-items --all-features
         env:
           RUSTDOCFLAGS: -Dwarnings
 
