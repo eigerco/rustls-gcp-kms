@@ -44,6 +44,7 @@ use thiserror::Error;
 
 /// KMS Signer implementation that delegates TLS signing operations to Google Cloud KMS
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 struct KmsSigner {
     /// Google Cloud KMS client
     client: Arc<Client>,
