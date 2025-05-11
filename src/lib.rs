@@ -274,7 +274,6 @@ pub enum KmsError {
 ///     "3"  // Version number
 /// );
 /// ```
-#[non_exhaustive]
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct KmsConfig {
