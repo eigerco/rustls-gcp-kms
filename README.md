@@ -74,4 +74,4 @@ async fn send_request() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-}
+```
