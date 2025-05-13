@@ -244,6 +244,33 @@ pub enum KmsError {
     UnsupportedScheme(String),
 }
 
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for KmsConfig {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(serde::Deserialize)]
+        struct KmsConfigHelper {
+            project_id: String,
+            location: String,
+            keyring: String,
+            cryptokey: String,
+            cryptokey_version: String,
+        }
+
+        let helper = KmsConfigHelper::deserialize(deserializer)?;
+
+        Ok(KmsConfig::new(
+            helper.project_id,
+            helper.location,
+            helper.keyring,
+            helper.cryptokey,
+            helper.cryptokey_version,
+        ))
+    }
+}
+
 /// Configuration for connecting to Google Cloud KMS and identifying a specific key.
 ///
 /// This struct encapsulates all the information needed to locate a specific key version
@@ -252,7 +279,7 @@ pub enum KmsError {
 /// `projects/{project_id}/locations/{location}/keyRings/{keyring}/cryptoKeys/{key}/cryptoKeyVersions/{version}`
 ///
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct KmsConfig {
     /// Google Cloud project ID
     pub project_id: String,
@@ -264,7 +291,9 @@ pub struct KmsConfig {
     pub cryptokey: String,
     /// Version of the crypto key to use
     pub cryptokey_version: String,
+    #[cfg_attr(feature = "serde", serde(skip))]
     crypto_key_name: String,
+    #[cfg_attr(feature = "serde", serde(skip))]
     crypto_key_version_name: String,
 }
 
