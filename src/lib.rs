@@ -251,7 +251,7 @@ pub enum KmsError {
 /// It follows Google's resource naming hierarchy:
 /// `projects/{project_id}/locations/{location}/keyRings/{keyring}/cryptoKeys/{key}/cryptoKeyVersions/{version}`
 ///
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct KmsConfig {
     /// Google Cloud project ID
