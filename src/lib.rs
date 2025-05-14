@@ -243,33 +243,6 @@ pub enum KmsError {
     UnsupportedScheme(String),
 }
 
-#[cfg(feature = "serde")]
-impl<'de> serde::Deserialize<'de> for KmsConfig {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        #[derive(serde::Deserialize)]
-        struct KmsConfigHelper {
-            project_id: String,
-            location: String,
-            keyring: String,
-            cryptokey: String,
-            cryptokey_version: String,
-        }
-
-        let helper = KmsConfigHelper::deserialize(deserializer)?;
-
-        Ok(KmsConfig::new(
-            helper.project_id,
-            helper.location,
-            helper.keyring,
-            helper.cryptokey,
-            helper.cryptokey_version,
-        ))
-    }
-}
-
 /// Configuration for connecting to Google Cloud KMS and identifying a specific key.
 ///
 /// This struct encapsulates all the information needed to locate a specific key version
@@ -345,9 +318,7 @@ impl KmsConfig {
             crypto_key_version_name,
         }
     }
-}
 
-impl KmsConfig {
     /// Validates that all required KMS configuration fields have been set.
     ///
     /// This function checks that none of the essential KMS configuration fields
@@ -387,6 +358,33 @@ impl KmsConfig {
         }
 
         Err(errors.join(","))
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for KmsConfig {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(serde::Deserialize)]
+        struct KmsConfigHelper {
+            project_id: String,
+            location: String,
+            keyring: String,
+            cryptokey: String,
+            cryptokey_version: String,
+        }
+
+        let helper = KmsConfigHelper::deserialize(deserializer)?;
+
+        Ok(KmsConfig::new(
+            helper.project_id,
+            helper.location,
+            helper.keyring,
+            helper.cryptokey,
+            helper.cryptokey_version,
+        ))
     }
 }
 
