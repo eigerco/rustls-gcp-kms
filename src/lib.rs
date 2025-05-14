@@ -161,7 +161,6 @@ impl Signer for KmsSigner {
 
         let req = AsymmetricSignRequest {
             name: self.cryptokey_version_name.clone(),
-            data: message.to_vec(),
             digest: Some(digest),
             ..Default::default()
         };
