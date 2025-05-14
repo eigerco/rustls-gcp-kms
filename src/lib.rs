@@ -248,13 +248,13 @@ pub enum KmsError {
 /// This struct encapsulates all the information needed to locate a specific key version
 /// in Google Cloud KMS.
 /// It follows Google's resource naming hierarchy:
-/// `projects/{project_id}/locations/{location}/keyRings/{keyring}/cryptoKeys/{key}/cryptoKeyVersions/{version}`
+/// `projects/{project}/locations/{location}/keyRings/{keyring}/cryptoKeys/{key}/cryptoKeyVersions/{version}`
 ///
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct KmsConfig {
     /// Google Cloud project ID
-    pub project_id: String,
+    pub project: String,
     /// Location where the key is stored (e.g., "global", "us-central1")
     pub location: String,
     /// Name of the key ring containing the key
@@ -274,8 +274,8 @@ impl KmsConfig {
     ///
     /// # Arguments
     ///
-    /// * `project_id` - Google Cloud project ID
-    /// * `locationd` - Location where the key is stored (e.g., "global", "us-central1")
+    /// * `project` - Google Cloud project ID
+    /// * `location` - Location where the key is stored (e.g., "global", "us-central1")
     /// * `keyring` - Name of the key ring containing the key
     /// * `cryptokey` - Name of the crypto key
     /// * `cryptokey_version` - Version of the crypto key to use
@@ -283,33 +283,22 @@ impl KmsConfig {
     /// # Returns
     ///
     /// A new `KmsConfig` instance.
-    pub fn new<P, L, KR, CK, CV>(
-        project_id: P,
-        location_id: L,
-        keyring_id: KR,
-        cryptokey_id: CK,
-        cryptokey_version: CV,
-    ) -> Self
-    where
-        P: Into<String>,
-        L: Into<String>,
-        KR: Into<String>,
-        CK: Into<String>,
-        CV: Into<String>,
-    {
-        let project_id = project_id.into();
-        let location = location_id.into();
-        let keyring = keyring_id.into();
-        let cryptokey = cryptokey_id.into();
-        let cryptokey_version = cryptokey_version.into();
+    #[must_use]
+    pub fn new(
+        project: String,
+        location: String,
+        keyring: String,
+        cryptokey: String,
+        cryptokey_version: String,
+    ) -> Self {
         let crypto_key_name = format!(
-            "projects/{project_id}/locations/{location}/keyRings/{keyring}/cryptoKeys/{cryptokey}"
+            "projects/{project}/locations/{location}/keyRings/{keyring}/cryptoKeys/{cryptokey}"
         );
         let crypto_key_version_name =
             format!("{crypto_key_name}/cryptoKeyVersions/{cryptokey_version}");
 
         Self {
-            project_id,
+            project,
             location,
             keyring,
             cryptokey,
@@ -333,8 +322,8 @@ impl KmsConfig {
     pub fn validate(&self) -> Result<(), String> {
         let mut errors = Vec::new();
 
-        if self.project_id.is_empty() {
-            errors.push("project_id should be set");
+        if self.project.is_empty() {
+            errors.push("project should be set");
         }
 
         if self.location.is_empty() {
@@ -369,7 +358,7 @@ impl<'de> serde::Deserialize<'de> for KmsConfig {
     {
         #[derive(serde::Deserialize)]
         struct KmsConfigHelper {
-            project_id: String,
+            project: String,
             location: String,
             keyring: String,
             cryptokey: String,
@@ -379,7 +368,7 @@ impl<'de> serde::Deserialize<'de> for KmsConfig {
         let helper = KmsConfigHelper::deserialize(deserializer)?;
 
         Ok(KmsConfig::new(
-            helper.project_id,
+            helper.project,
             helper.location,
             helper.keyring,
             helper.cryptokey,
