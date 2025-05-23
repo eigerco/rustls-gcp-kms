@@ -1,7 +1,7 @@
 # Rustls KMS Provider
 A Rust library that enables TLS client authentication via rustls using private keys stored in Google Cloud KMS (Key Management Service).
 
-[![Build Status](https://github.com/vaporif/rustls-gcp-kms/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/vaporif/rustls-gcp-kms/actions/workflows/ci.yaml?query=branch%3Amain)
+[![Build Status](https://github.com/eigerco/rustls-gcp-kms/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/eigerco/rustls-gcp-kms/actions/workflows/ci.yaml?query=branch%3Amain)
 
 Installation
 
