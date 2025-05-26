@@ -404,11 +404,11 @@ impl<'de> serde::Deserialize<'de> for KmsConfig {
 ///  async fn send_request() -> Result<(), Box<dyn std::error::Error>> {
 ///      // Configure KMS
 ///      let kms_config = KmsConfig::new(
-///          "my-project-id",
-///          "global",
-///          "my-keyring",
-///          "my-signing-key",
-///          "1",
+///          "my-project-id".to_string(),
+///          "global".to_string(),
+///          "my-keyring".to_string(),
+///          "my-signing-key".to_string(),
+///          "1".to_string(),
 ///      );
 ///
 ///      let client_config = ClientConfig::default()
