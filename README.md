@@ -4,22 +4,21 @@ A Rust library that enables TLS client authentication via rustls using private k
 [![Build Status](https://github.com/eigerco/rustls-gcp-kms/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/eigerco/rustls-gcp-kms/actions/workflows/ci.yaml?query=branch%3Amain)
 
 
-Installation
+## Installation
 
 Add the library to your Cargo.toml:
 
 ```toml
 [dependencies]
-rustls-kms = "0.1.0"
+rustls-gcp-kms = { git = "https://github.com/eigerco/rustls-gcp-kms.git" }
+
 ```
 
-# Code of conduct
+## Features
+- serde: adds Serialize/Deserialize for `KmsConfig`
 
-This project adopts the [Rust Code of Conduct](https://www.rust-lang.org/policies/code-of-conduct).
-Please email rustls-mod@googlegroups.com to report any instance of misconduct, or if you
-have any comments or questions on the Code of Conduct.
 
-# Example
+## Example
 
 ```rust
 use std::sync::Arc;
@@ -76,3 +75,9 @@ async fn send_request() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+
+## Code of conduct
+
+This project adopts the [Rust Code of Conduct](https://www.rust-lang.org/policies/code-of-conduct).
+Please email rustls-mod@googlegroups.com to report any instance of misconduct, or if you
+have any comments or questions on the Code of Conduct.
