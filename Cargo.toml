@@ -3,9 +3,11 @@ name = "rustls-gcp-kms"
 description = "TLS client authentication using Google Cloud KMS for rustls"
 keywords = ["tls", "kms", "authentication", "security", "cloud"]
 categories = ["cryptography", "authentication", "api-bindings"]
-repository = "https://github.com/vaporif/rustls-gcp-kms"
+repository = "https://github.com/eigerco/rustls-gcp-kms"
 version = "0.1.0"
-license = "MIT/Apache-2.0"
+authors = ["Eiger <hello@eiger.co>"]
+homepage = "https://www.eiger.co"
+license = "Apache-2.0"
 edition = "2021"
 
 [dependencies]

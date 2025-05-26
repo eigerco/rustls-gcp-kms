@@ -239,7 +239,7 @@ pub enum KmsError {
     #[error("key purpose is not asymmetric sign, purpose is: {0:?}")]
     UnexpectedKeyPurpose(CryptoKeyPurpose),
     /// The key algorithm is not supported by rustls
-    #[error("usupported scheme of kms {0}")]
+    #[error("unsupported scheme of kms {0}")]
     UnsupportedScheme(String),
 }
 
