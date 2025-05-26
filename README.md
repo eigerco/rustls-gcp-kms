@@ -78,6 +78,4 @@ async fn send_request() -> Result<(), Box<dyn std::error::Error>> {
 
 ## About Eiger
 
-We are engineers. We contribute to various ecosystems by building low level implementations and core components. We built Lumina because we believe in the modular thesis. We wanted to make the Celestia light node available and easy to run for as many users so that everyone can perform sampling to ensure data availability.
-
-Contact us at hello@eiger.co
+We are engineers. We contribute to various ecosystems by building low level implementations and core components. Contact us at hello@eiger.co
